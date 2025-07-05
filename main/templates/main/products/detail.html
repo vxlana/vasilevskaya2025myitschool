@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- Левая колонка с картинкой -->
+  <div class="col-md-5 mb-4">
+    {% if post.image %}
+      <img src="{{ post.image.url }}" alt="{{ post.name }}" class="img-fluid rounded shadow-sm"
+           style="max-height: 400px; width: 100%; object-fit: contain; background: #1e1e1e; padding: 15px;">
+    {% else %}
+      <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+        <span class="text-muted">Нет изображения</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Правая колонка с описанием -->
+  <div class="col-md-7">
+    <h2 class="mb-3">{{ post.name }}</h2>
+    <p class="text-muted mb-2"><strong>Категория:</strong> {{ post.category.name }}</p>
+
+    <p class="fs-5 mb-3">
+      {% if post.discount > 0 %}
+        <span class="text-decoration-line-through text-muted">{{ post.price }} $</span>
+        <span class="text-danger fw-bold ms-2">{{ post.get_price_with_discount|floatformat:2 }} $</span>
+      {% else %}
+        <span class="fw-bold">{{ post.price }} $</span>
+      {% endif %}
+    </p>
+
+    <h5>Доступные размеры:</h5>
+    <ul>
+      {% for item in sizes_availability %}
+        <li>{{ item.size }} -
+          {% if item.available %}
+            <span style="color: #4caf50;">В наличии</span>
+          {% else %}
+            <span style="color: #f44336;">Нет в наличии</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+
+
+
+    <form method="post" action="{% url 'cart:cart_add' post.id %}">
+      {% csrf_token %}
+
+      <label for="size">Выберите размер:</label>
+      <select name="size" id="size" required>
+        {% for item in sizes_availability %}
+          {% if item.available %}
+            <option value="{{ item.size }}">{{ item.size }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+
+      <label for="quantity">Количество:</label>
+      <input type="number" name="quantity" id="quantity" value="1" min="1">
+
+      <button type="submit" class="btn btn-success mt-2">Добавить в корзину</button>
+    </form>
+
+    <p class="mb-4" style="white-space: pre-wrap;">{{ post.description|default:"Описание отсутствует" }}</p>
+
+
+  </div>
+</div>
+
+<hr>
+
+<!-- Комментарии -->
+<h4 class="mb-3">Комментарии</h4>
+{% for comment in comments %}
+  <div class="mb-3 border rounded p-3 shadow-sm">
+    <strong>{{ comment.autor }}</strong>
+    <small class="text-muted float-end">{{ comment.created_on|date:"d.m.Y H:i" }}</small>
+    <p class="mt-2 mb-0">{{ comment.body }}</p>
+  </div>
+{% empty %}
+  <p class="text-muted">Комментариев пока нет.</p>
+{% endfor %}
+
+<hr>
+
+<!-- Форма комментария -->
+<h4 class="mb-3">Оставить комментарий</h4>
+<form method="post" class="mb-5">
+  {% csrf_token %}
+  <div class="mb-3">
+    {{ form.author.label_tag }}
+    {{ form.author }}
+  </div>
+  <div class="mb-3">
+    {{ form.body.label_tag }}
+    {{ form.body }}
+  </div>
+  <button type="submit" class="btn btn-primary">Отправить</button>
+</form>
+{% endblock %}

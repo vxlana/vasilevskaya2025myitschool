@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Профиль пользователя</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}<br>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </form>
+
+    <hr>
+
+    <h3>История заказов</h3>
+    {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-dark">
+                <thead>
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Дата</th>
+                        <th>Статус</th>
+                        <th>Состав заказа</th>
+                        <th>Трекинг</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td>{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>{{ order.get_status_display }}</td>
+                            <td>
+                                <ul class="mb-0">
+                                    {% for item in order.items.all %}
+                                        <li>
+                                            {{ item.clothing_item.name }} — {{ item.size.name }} × {{ item.quantity }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                {% if order.tracking_number != "В ожидании" and order.tracking_number != "Pending" and order.tracking_number %}
+                                {{ order.tracking_number }}
+                                {% else %}
+                                Пока не присвоен
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>У вас пока нет заказов.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

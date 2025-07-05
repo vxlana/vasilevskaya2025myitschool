@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+
+<style>
+.table-cart {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: #1e1e1e;
+    color: #f1f1f1;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.table-head,
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding: 10px 0;
+}
+
+.table-head .table-p {
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    margin: 0;
+    color: #bbb;
+}
+
+.cart-item {
+    padding: 15px 0px;
+
+}
+
+.c-item-img img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #555;
+}
+
+.left-side-items {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.c-item-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.item-name-in-cart {
+    color: #bb86fc;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 5px;
+}
+
+.item-size-bottom {
+    color: #ccc;
+    font-size: 14px;
+}
+
+.c-item-price,
+.c-item-total {
+    min-width: 80px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.c-item-quantity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+
+.c-quantity-form input[type="number"] {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2c2c2c;
+    color: white;
+    padding: 4px;
+    margin-bottom: 5px;
+}
+
+.c-quantity-form a {
+    color: #ff6b6b;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.total_price_cart {
+    text-align: right;
+    margin-top: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.default-btn,
+.defailt-btn {
+    display: inline-block;
+    margin-top: 20px;
+    background: #bb86fc;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.empty-cart-message h3 {
+    color: #ccc;
+}
+
+.right-side-items,
+.right-size-head {
+    margin-left: auto;
+    display: flex;
+    gap: 60px;
+    min-width: 320px;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.c-item-price,
+.c-item-quantity,
+.c-item-total {
+    text-align: right;
+    min-width: 80px;
+}
+
+</style>
+
+    <h1 class="text-center mb-5">$ Корзина $</h1>
+    <div class="table-cart">
+       <div class="cart-header d-flex justify-content-between align-items-center mb-3">
+            <div class="left-side-items">
+                <p class="table-p">Товары</p>
+            </div>
+            <div class="right-side-items">
+                <div class="c-item-price table-p">Цена</div>
+                <div class="c-item-quantity table-p">Количество</div>
+                <div class="c-item-total table-p">Всего</div>
+            </div>
+        </div>
+
+        <div class="table-items">
+            {% if cart|length == 0 %}
+                <div class="empty-cart-message d-flex flex-column justify-content-center align-items-center text-center">
+                    <h3 class="mt-5 mb-5">Корзина пуста.</h3>
+                    <a href="{% url 'main:product_list' %}" class="default-btn">Список товаров</a>
+                </div>
+            {% else %}
+                {% for item in cart %}
+                    <div class="cart-item d-flex justify-content-between align-items-center">
+                        <div class="left-side-items d-flex">
+                            <div class ="c-item-img">
+                                <img src="{{ item.item.image.url }}" alt="">
+                            </div>
+                            <div class="c-item-info">
+                                <a href="{% url 'main:product_detail' item.item.id %}" class="item-name-in-cart p-3">{{ item.item.name }}</a>
+                                <p class="item-size-bottom fw-bold p-3">{{ item.size }}</p>
+                            </div>
+                        </div>
+                        <div class="right-side-items d-flex gap-5">
+                            <div class="c-item-price">
+                                {{ item.total_price|floatformat:2 }}
+                            </div>
+                            <div class="c-item-quantity">
+                                <form method="post" action="{% url 'cart:cart_update' item.item.id %}" class="c-quantity-form">
+                                    {% csrf_token %}
+                                    <input type="number" class="text-center" name="quantity" value="{{ item.quantity }}" min="1" id="quantity-{{ item.item.id }}">
+                                    <a href="{% url 'cart:cart_remove' item.item.id %}">Удалить</a>
+                                </form>
+                            </div>
+                            <div class="c-item-total">
+                                {{ item.total_price|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% if cart|length %}
+        <h3 class="total_price_cart mt-3">К оформлению: ${{ cart.get_total_price|floatformat:2 }}</h3>
+        <a href="{% url 'orders:order_create' %}" class="default-btn">Заказать</a>
+    {% endif %}
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
